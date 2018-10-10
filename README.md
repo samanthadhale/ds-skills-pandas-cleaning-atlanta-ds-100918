@@ -138,7 +138,7 @@ df.info()
 
     <class 'pandas.core.frame.DataFrame'>
     RangeIndex: 197625 entries, 0 to 197624
-    Data columns (total 12 columns):
+    Data columns (total 11 columns):
     C/A                                                                     197625 non-null object
     UNIT                                                                    197625 non-null object
     SCP                                                                     197625 non-null object
@@ -150,9 +150,8 @@ df.info()
     DESC                                                                    197625 non-null object
     ENTRIES                                                                 197625 non-null int64
     EXITS                                                                   197625 non-null int64
-    On_N_Line                                                               197625 non-null bool
-    dtypes: bool(1), int64(2), object(9)
-    memory usage: 16.8+ MB
+    dtypes: int64(2), object(9)
+    memory usage: 16.6+ MB
 
 
 
@@ -388,7 +387,7 @@ We can quickly use a list comprehension to clean up all of the column names.
 
 ```python
 def clean(col_name):
-    cleaned = #Your code here; whatever you want to do to col_name. Hint: think back to str methods.
+    cleaned = col_name.strip() #In this simple case, we're just removing leading/trailing whitespace
     return cleaned
 ```
 
@@ -407,6 +406,15 @@ df.columns = [clean(col) for col in df.columns]
 df.columns
 ```
 
+
+
+
+    Index(['C/A', 'UNIT', 'SCP', 'STATION', 'LINENAME', 'DIVISION', 'DATE', 'TIME',
+           'DESC', 'ENTRIES', 'EXITS', 'On_N_Line'],
+          dtype='object')
+
+
+
 # Reformatting Column Types
 Another common data munging technique can be reformating column types. We first previewed column types above using the `df.info()` method, which we'll repeat here.
 
@@ -418,18 +426,18 @@ df.info()
     <class 'pandas.core.frame.DataFrame'>
     RangeIndex: 197625 entries, 0 to 197624
     Data columns (total 12 columns):
-    C/A                                                                     197625 non-null object
-    UNIT                                                                    197625 non-null object
-    SCP                                                                     197625 non-null object
-    STATION                                                                 197625 non-null object
-    LINENAME                                                                197625 non-null object
-    DIVISION                                                                197625 non-null object
-    DATE                                                                    197625 non-null object
-    TIME                                                                    197625 non-null object
-    DESC                                                                    197625 non-null object
-    ENTRIES                                                                 197625 non-null int64
-    EXITS                                                                   197625 non-null int64
-    On_N_Line                                                               197625 non-null bool
+    C/A          197625 non-null object
+    UNIT         197625 non-null object
+    SCP          197625 non-null object
+    STATION      197625 non-null object
+    LINENAME     197625 non-null object
+    DIVISION     197625 non-null object
+    DATE         197625 non-null object
+    TIME         197625 non-null object
+    DESC         197625 non-null object
+    ENTRIES      197625 non-null int64
+    EXITS        197625 non-null int64
+    On_N_Line    197625 non-null bool
     dtypes: bool(1), int64(2), object(9)
     memory usage: 16.8+ MB
 
@@ -471,7 +479,7 @@ df.LINENAME = df.LINENAME.astype(int)
 
     ValueError                                Traceback (most recent call last)
 
-    <ipython-input-15-9635123507d4> in <module>()
+    <ipython-input-17-9635123507d4> in <module>()
     ----> 1 df.LINENAME = df.LINENAME.astype(int)
     
 
@@ -900,12 +908,166 @@ Here we begin to do some exploratory analysis to answer some questions.
 
 
 ```python
-#Your code here
+df.head(2) #Having a preview as you write code is helpful
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>C/A</th>
+      <th>UNIT</th>
+      <th>SCP</th>
+      <th>STATION</th>
+      <th>LINENAME</th>
+      <th>DIVISION</th>
+      <th>DATE</th>
+      <th>TIME</th>
+      <th>DESC</th>
+      <th>ENTRIES</th>
+      <th>EXITS</th>
+      <th>On_N_Line</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>A002</td>
+      <td>R051</td>
+      <td>02-00-00</td>
+      <td>59 ST</td>
+      <td>NQR456W</td>
+      <td>BMT</td>
+      <td>2018-08-25</td>
+      <td>00:00:00</td>
+      <td>REGULAR</td>
+      <td>6736067</td>
+      <td>2283184</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>A002</td>
+      <td>R051</td>
+      <td>02-00-00</td>
+      <td>59 ST</td>
+      <td>NQR456W</td>
+      <td>BMT</td>
+      <td>2018-08-25</td>
+      <td>04:00:00</td>
+      <td>REGULAR</td>
+      <td>6736087</td>
+      <td>2283188</td>
+      <td>True</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+```python
+#Create a day of the week column
+df['Day_of_week'] = df.DATE.dt.dayofweek
+#check results briefly
+df.Day_of_week.value_counts(normalize=True)
+```
+
+
+
+
+    1    0.145589
+    3    0.143944
+    0    0.142968
+    2    0.142710
+    4    0.142194
+    6    0.142092
+    5    0.140503
+    Name: Day_of_week, dtype: float64
+
+
+
+
+```python
+df.groupby('Day_of_week').sum().plot(kind='barh')
+plt.title('Subway Traffic by Day of the Week')
+plt.xlabel('Total Traffic')
+plt.ylabel('Day of Week')
+plt.legend(bbox_to_anchor=(1,1)) #Move the legend to the upper right corner
+```
+
+
+
+
+    <matplotlib.legend.Legend at 0x11030b390>
+
+
+
+
+![png](index_files/index_50_1.png)
+
+
+
+```python
+#Note: this graph is actually still fairly misleading as the raw data itself is cumulative counts
 ```
 
 # 2. Is there more subway traffic on a weekend or a weekday?    Be specific in comparing magnitudes.
 
 
 ```python
-#Your code here
+# Aggregate days of week into weekday/weekend; docstring shows Monday=0, Sunday=6
+df.DATE.dt.dayofweek?
 ```
+
+
+```python
+#Create binning dict
+day_grp = {}
+for i in range(7):
+    if i <= 4:
+        day_grp[i] = 'Weekday'
+    else:
+        day_grp[i] = 'Weekend'
+df['WKEND'] = df.Day_of_week.map(day_grp)
+```
+
+
+```python
+#Aggregate
+grouped = df.groupby('WKEND').mean() #sum is not appropriate as there are more days during the week
+#Create the graph
+grouped.plot(kind='barh')
+plt.title('Subway Traffic Weekdays vs Weekends')
+plt.xlabel('Average Traffic')
+plt.legend(bbox_to_anchor=(1,1)) #Move the legend to the upper right corner
+```
+
+
+
+
+    <matplotlib.legend.Legend at 0x11037d748>
+
+
+
+
+![png](index_files/index_55_1.png)
+
